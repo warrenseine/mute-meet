@@ -1,0 +1,16 @@
+{
+  "name": "mute-meet",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "build": "esbuild server.js --bundle --platform=node --format=esm --external:node:*  --outfile=dist/mute-meet.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.21.5"
+  }
+}
