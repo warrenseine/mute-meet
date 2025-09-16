@@ -7,15 +7,21 @@ DIST_PATH="$HOME/.local/dist"
 DIST_FILE="mute-meet.js"
 LOG_DIR="$HOME/Library/Logs/com.mute-meet.relay"
 
-test -f package.json || {
-  echo "Error: package.json not found. Run from root directory." >&2
-  exit 1
-}
+if [[ ! -f "dist/$DIST_FILE" ]]; then
+  mkdir -p dist
+
+  echo "Installing dependencies..."
+  npm install >/dev/null
+
+  echo "Building $DIST_FILE..."
+  npm run build >/dev/null
+fi
 
 mkdir -p "$LOG_DIR"
 mkdir -p "$DIST_PATH"
 
 cp "dist/$DIST_FILE" "$DIST_PATH/$DIST_FILE"
+echo "Installed: $DIST_PATH/$DIST_FILE"
 
 cat > "$PLIST" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
