@@ -57,12 +57,14 @@ async function executeToggleMute(tabId) {
     const results = await chrome.scripting.executeScript({
       target: { tabId },
       func: () => {
-        const button = document.querySelector("button[aria-label*='turn on microphone' i]") ??
-          document.querySelector("button[aria-label*='turn off microphone' i]")
+        const onBtn = document.querySelector("button[aria-label*='turn on microphone' i]");
+        const offBtn = document.querySelector("button[aria-label*='turn off microphone' i]");
+        const button = onBtn ?? offBtn;
 
         if (button) {
+          const muting = !!offBtn; // if "turn off" is visible, clicking will mute
           button.click();
-          return { ok: true };
+          return { ok: true, muted: muting };
         }
 
         return { ok: false, reason: "microphone button not found" };
@@ -73,6 +75,19 @@ async function executeToggleMute(tabId) {
 
     if (result && result.ok) {
       console.log(`mute-meet: success on tab ${tabId}`);
+      try {
+        await chrome.notifications.create({
+          type: "basic",
+          iconUrl: "icons/icon-48.png",
+          title: "Mute Meet",
+          message: result.muted ? "🤫 Muted" : "🗣️ Unmuted",
+          priority: 0,
+          silent: true
+        });
+      } catch (e) {
+        console.warn("mute-meet: notification error", e);
+        // ignore notification errors
+      }
     } else {
       console.warn(`mute-meet: failed on tab ${tabId} ${result && result.reason}`);
     }
