@@ -4,7 +4,7 @@ set -euo pipefail
 LABEL="com.mute-meet.relay"
 PLIST="$HOME/Library/LaunchAgents/${LABEL}.plist"
 DIST_PATH="$HOME/.local/dist"
-DIST_FILE="mute-meet.js"
+DIST_FILE="mute-meet.cjs"
 LOG_DIR="$HOME/Library/Logs/com.mute-meet.relay"
 
 if [[ ! -f "dist/$DIST_FILE" ]]; then

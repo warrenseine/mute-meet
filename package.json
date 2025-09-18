@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "build": "esbuild server.js --bundle --platform=node --format=esm --external:node:*  --outfile=dist/mute-meet.js",
+    "build": "esbuild server.js --bundle --platform=node --format=cjs --external:node:* --outfile=dist/mute-meet.cjs",
     "clean": "rm -rf dist"
   },
   "dependencies": {
