@@ -3,6 +3,7 @@ set -euo pipefail
 
 LABEL="com.mute-meet.relay"
 PLIST="$HOME/Library/LaunchAgents/${LABEL}.plist"
+NODE_PATH="/opt/homebrew/bin/node"
 DIST_PATH="$HOME/.local/dist"
 DIST_FILE="mute-meet.cjs"
 LOG_DIR="$HOME/Library/Logs/com.mute-meet.relay"
@@ -32,7 +33,7 @@ cat > "$PLIST" <<PLIST
   <string>${LABEL}</string>
   <key>ProgramArguments</key>
   <array>
-    <string>node</string>
+    <string>${NODE_PATH}</string>
     <string>${DIST_PATH}/${DIST_FILE}</string>
   </array>
   <key>WorkingDirectory</key>
