@@ -4,7 +4,11 @@ let ws;
 function connectRelay() {
   const RELAY_WS_URL = "ws://localhost:9876";
 
-  if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
+  if (
+    ws &&
+    (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)
+  )
+    return;
 
   console.log(`mute-meet: ws connect ${RELAY_WS_URL}`);
 
@@ -18,7 +22,9 @@ function connectRelay() {
 
   ws.addEventListener("open", () => {
     console.log("mute-meet: ws connected");
-    try { ws.send(JSON.stringify({ type: "ping", ts: Date.now() })); } catch (_) { }
+    try {
+      ws.send(JSON.stringify({ type: "ping", ts: Date.now() }));
+    } catch (_) {}
   });
 
   ws.addEventListener("message", (ev) => {
@@ -45,7 +51,9 @@ function connectRelay() {
 
   ws.addEventListener("error", () => {
     console.warn("mute-meet: ws error; closing");
-    try { ws.close(); } catch (_) { }
+    try {
+      ws.close();
+    } catch (_) {}
   });
 }
 
@@ -57,8 +65,12 @@ async function executeToggleMute(tabId) {
     const results = await chrome.scripting.executeScript({
       target: { tabId },
       func: () => {
-        const onBtn = document.querySelector("button[aria-label*='turn on microphone' i]");
-        const offBtn = document.querySelector("button[aria-label*='turn off microphone' i]");
+        const onBtn = document.querySelector(
+          "button[aria-label*='turn on microphone' i]"
+        );
+        const offBtn = document.querySelector(
+          "button[aria-label*='turn off microphone' i]"
+        );
         const button = onBtn ?? offBtn;
 
         if (button) {
@@ -68,7 +80,7 @@ async function executeToggleMute(tabId) {
         }
 
         return { ok: false, reason: "microphone button not found" };
-      }
+      },
     });
 
     const result = results?.[0]?.result;
@@ -82,17 +94,23 @@ async function executeToggleMute(tabId) {
           title: "Mute Meet",
           message: result.muted ? "🤫 Muted" : "🗣️ Unmuted",
           priority: 0,
-          silent: true
+          silent: true,
         });
       } catch (e) {
         console.warn("mute-meet: notification error", e);
         // ignore notification errors
       }
     } else {
-      console.warn(`mute-meet: failed on tab ${tabId} ${result && result.reason}`);
+      console.warn(
+        `mute-meet: failed on tab ${tabId} ${result && result.reason}`
+      );
     }
   } catch (err) {
-    console.error(`mute-meet: script injection error ${err && err.message ? err.message : err}`);
+    console.error(
+      `mute-meet: script injection error ${
+        err && err.message ? err.message : err
+      }`
+    );
   }
 }
 
@@ -126,7 +144,7 @@ let heartbeatInterval;
 
 async function runHeartbeat() {
   try {
-    await chrome.storage.local.set({ 'last-heartbeat': Date.now() });
+    await chrome.storage.local.set({ "last-heartbeat": Date.now() });
   } catch (e) {
     // ignore
   }
@@ -137,7 +155,7 @@ async function startHeartbeat() {
   runHeartbeat().then(() => {
     heartbeatInterval = setInterval(runHeartbeat, 20 * 1000);
   });
-  console.log('mute-meet: heartbeat started');
+  console.log("mute-meet: heartbeat started");
 }
 
 startHeartbeat();
