@@ -148,6 +148,11 @@ async function runHeartbeat() {
   } catch (e) {
     // ignore
   }
+  try {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: "ping", ts: Date.now() }));
+    }
+  } catch (_) {}
 }
 
 async function startHeartbeat() {
