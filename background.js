@@ -25,6 +25,8 @@ function connectRelay() {
     try {
       ws.send(JSON.stringify({ type: "ping", ts: Date.now() }));
     } catch (_) {}
+    // Record and send heartbeat on connect
+    runHeartbeat();
   });
 
   ws.addEventListener("message", (ev) => {
@@ -140,8 +142,6 @@ chrome.commands.onCommand.addListener((command) => {
 
 console.log("mute-meet: service worker loaded");
 
-let heartbeatInterval;
-
 async function runHeartbeat() {
   try {
     await chrome.storage.local.set({ "last-heartbeat": Date.now() });
@@ -155,12 +155,37 @@ async function runHeartbeat() {
   } catch (_) {}
 }
 
-async function startHeartbeat() {
-  if (heartbeatInterval) clearInterval(heartbeatInterval);
-  runHeartbeat().then(() => {
-    heartbeatInterval = setInterval(runHeartbeat, 20 * 1000);
-  });
-  console.log("mute-meet: heartbeat started");
+// Removed interval-based heartbeat; alarms will wake the worker
+
+// Keepalive using chrome.alarms (MV3 workers are ephemeral; alarms wake the worker)
+const KEEPALIVE_ALARM_NAME = "mute-meet-keepalive";
+
+function ensureKeepaliveAlarm() {
+  try {
+    chrome.alarms.get(KEEPALIVE_ALARM_NAME, (alarm) => {
+      if (!alarm) {
+        chrome.alarms.create(KEEPALIVE_ALARM_NAME, { periodInMinutes: 0.5 });
+        console.log("mute-meet: keepalive alarm created");
+      }
+    });
+  } catch (_) {}
 }
 
-startHeartbeat();
+chrome.runtime.onInstalled.addListener(() => {
+  ensureKeepaliveAlarm();
+});
+
+chrome.runtime.onStartup?.addListener?.(() => {
+  ensureKeepaliveAlarm();
+});
+
+// On worker boot, also ensure alarm exists
+ensureKeepaliveAlarm();
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm && alarm.name === KEEPALIVE_ALARM_NAME) {
+    // Attempt to reconnect and run a heartbeat write
+    connectRelay();
+    runHeartbeat();
+  }
+});
