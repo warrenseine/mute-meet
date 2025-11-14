@@ -1,5 +1,6 @@
 import http from "http";
 import { WebSocketServer } from "ws";
+import { execFile } from "child_process";
 
 process.title = "mute-meet";
 const HTTP_PORT = process.env.PORT ? Number(process.env.PORT) : 9876;
@@ -8,6 +9,29 @@ const RELAY_TOKEN = process.env.RELAY_TOKEN || "";
 
 function nowIso() {
   return new Date().toISOString();
+}
+
+function sendSlackToggleHotkey() {
+  const script = `
+on run argv
+  set frontApp to (path to frontmost application as text)
+  tell application "Slack" to activate
+  delay 0.05
+  tell application "System Events" to keystroke space using {command down, shift down}
+  tell application frontApp to activate
+  return "sent"
+end run
+  `;
+  execFile("/usr/bin/osascript", ["-e", script], { timeout: 2000 }, (err) => {
+    if (err) {
+      console.warn(
+        `[mute-meet ${nowIso()}] Slack hotkey error:`,
+        err && err.message ? err.message : err
+      );
+      return;
+    }
+    console.log(`[mute-meet ${nowIso()}] Slack hotkey sent`);
+  });
 }
 
 const server = http.createServer((req, res) => {
@@ -36,6 +60,9 @@ const server = http.createServer((req, res) => {
         wss.clients.size
       } client(s) from ${req.socket.remoteAddress || ""}`
     );
+
+    if (sent === 0) sendSlackToggleHotkey();
+
     res.writeHead(204);
     res.end();
     return;
