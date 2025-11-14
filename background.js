@@ -1,14 +1,12 @@
 // Relay WebSocket client (single service worker)
 let ws;
+let activeMeetPorts = 0;
 
 function connectRelay() {
   const RELAY_WS_URL = "ws://localhost:9876";
 
-  if (
-    ws &&
-    (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)
-  )
-    return;
+  if (ws?.readyState === WebSocket.OPEN) return;
+  if (ws?.readyState === WebSocket.CONNECTING) return;
 
   console.log(`mute-meet: ws connect ${RELAY_WS_URL}`);
 
@@ -47,8 +45,9 @@ function connectRelay() {
   });
 
   ws.addEventListener("close", () => {
-    console.warn("mute-meet: ws closed; reconnecting");
-    setTimeout(connectRelay, 1000);
+    console.warn("mute-meet: ws closed");
+    // Reconnect only if Meet presence still exists
+    if (activeMeetPorts > 0) setTimeout(connectRelay, 1000);
   });
 
   ws.addEventListener("error", () => {
@@ -59,7 +58,16 @@ function connectRelay() {
   });
 }
 
-connectRelay();
+function reevaluateRelayDesiredState() {
+  if (activeMeetPorts > 0) {
+    if (ws?.readyState === WebSocket.OPEN) return;
+    if (ws?.readyState === WebSocket.CONNECTING) return;
+    connectRelay();
+  } else if (ws?.readyState === WebSocket.OPEN) {
+    console.log("mute-meet: closing ws due to no Meet presence");
+    ws.close();
+  }
+}
 
 async function executeToggleMute(tabId) {
   try {
@@ -185,7 +193,19 @@ ensureKeepaliveAlarm();
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm && alarm.name === KEEPALIVE_ALARM_NAME) {
     // Attempt to reconnect and run a heartbeat write
-    connectRelay();
+    if (activeMeetPorts > 0) connectRelay();
     runHeartbeat();
+  }
+});
+
+// Presence from Meet content script via long-lived ports
+chrome.runtime.onConnect.addListener((port) => {
+  if (port && port.name === "meet-presence") {
+    activeMeetPorts += 1;
+    reevaluateRelayDesiredState();
+    port.onDisconnect.addListener(() => {
+      activeMeetPorts = Math.max(0, activeMeetPorts - 1);
+      reevaluateRelayDesiredState();
+    });
   }
 });

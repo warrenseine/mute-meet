@@ -164,6 +164,9 @@ function shutdown(code = 0) {
     clearInterval(heartbeat);
   } catch {}
   try {
+    for (const ws of wss.clients) {
+      ws.terminate();
+    }
     wss.close();
   } catch {}
   try {
