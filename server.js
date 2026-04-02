@@ -14,11 +14,11 @@ function nowIso() {
 function sendSlackToggleHotkey() {
 	const script = `
 on run argv
-  set frontApp to (path to frontmost application as text)
-  tell application "Slack" to activate
-  delay 0.05
-  tell application "System Events" to keystroke space using {command down, shift down}
-  tell application frontApp to activate
+  tell application "System Events"
+    tell process "Slack"
+      keystroke space using {command down, shift down}
+    end tell
+  end tell
   return "sent"
 end run
   `;
@@ -61,7 +61,7 @@ const server = http.createServer((req, res) => {
 			} client(s) from ${req.socket.remoteAddress || ""}`,
 		);
 
-		if (sent === 0) sendSlackToggleHotkey();
+		sendSlackToggleHotkey();
 
 		res.writeHead(204);
 		res.end();
