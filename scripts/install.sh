@@ -55,6 +55,10 @@ echo "Created: $PLIST"
 if launchctl print "gui/$(id -u)/${LABEL}" >/dev/null 2>&1; then
   echo "Unloading existing service..."
   launchctl bootout "gui/$(id -u)/${LABEL}" || true
+  sleep 1
+  while launchctl print "gui/$(id -u)/${LABEL}" >/dev/null 2>&1; do
+    sleep 0.1
+  done
 fi
 
 echo "Loading service..."
