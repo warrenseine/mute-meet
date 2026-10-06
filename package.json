@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "build": "esbuild server.js --bundle --platform=node --format=cjs --external:node:* --outfile=dist/mute-meet.cjs",
+    "package": "npm run build && node --build-sea sea-config.json && codesign --sign - --force dist/mute-meet",
     "clean": "rm -rf dist"
   },
   "dependencies": {

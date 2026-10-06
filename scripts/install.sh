@@ -3,26 +3,34 @@ set -euo pipefail
 
 LABEL="com.mute-meet.relay"
 PLIST="$HOME/Library/LaunchAgents/${LABEL}.plist"
-NODE_PATH="/opt/homebrew/bin/node"
-DIST_PATH="$HOME/.local/dist"
-DIST_FILE="mute-meet.cjs"
+BIN_PATH="$HOME/.local/bin"
+BIN_FILE="mute-meet"
 LOG_DIR="$HOME/Library/Logs/com.mute-meet.relay"
 
-if [[ ! -f "dist/$DIST_FILE" ]]; then
+if [[ ! -f "dist/$BIN_FILE" ]]; then
   mkdir -p dist
 
-  echo "Installing dependencies..."
-  npm install >/dev/null
+  # Homebrew's node is built without SEA support; prefer the mise-pinned one.
+  run() {
+    if command -v mise >/dev/null 2>&1; then
+      mise exec -- "$@"
+    else
+      "$@"
+    fi
+  }
 
-  echo "Building $DIST_FILE..."
-  npm run build >/dev/null
+  echo "Installing dependencies..."
+  run npm install >/dev/null
+
+  echo "Building $BIN_FILE..."
+  run npm run package >/dev/null
 fi
 
 mkdir -p "$LOG_DIR"
-mkdir -p "$DIST_PATH"
+mkdir -p "$BIN_PATH"
 
-cp "dist/$DIST_FILE" "$DIST_PATH/$DIST_FILE"
-echo "Installed: $DIST_PATH/$DIST_FILE"
+cp "dist/$BIN_FILE" "$BIN_PATH/$BIN_FILE"
+echo "Installed: $BIN_PATH/$BIN_FILE"
 
 cat > "$PLIST" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -33,8 +41,7 @@ cat > "$PLIST" <<PLIST
   <string>${LABEL}</string>
   <key>ProgramArguments</key>
   <array>
-    <string>${NODE_PATH}</string>
-    <string>${DIST_PATH}/${DIST_FILE}</string>
+    <string>${BIN_PATH}/${BIN_FILE}</string>
   </array>
   <key>WorkingDirectory</key>
   <string>${HOME}</string>

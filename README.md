@@ -23,6 +23,8 @@ In a new terminal:
 ./scripts/install.sh
 ```
 
+This builds a standalone `mute-meet` binary (Node [single executable application](https://nodejs.org/api/single-executable-applications.html)), installs it to `~/.local/bin`, and registers it as a LaunchAgent. Building requires a Node with SEA support, such as the official build pinned in `mise.toml` (Homebrew's `node` is built without it). To build the binary only: `npm run package`.
+
 Or, to run from source:
 ```bash
 npm install

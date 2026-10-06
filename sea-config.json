@@ -1,0 +1,6 @@
+{
+  "main": "dist/mute-meet.cjs",
+  "output": "dist/mute-meet",
+  "disableExperimentalSEAWarning": true,
+  "useCodeCache": true
+}

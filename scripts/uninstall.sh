@@ -3,9 +3,8 @@ set -euo pipefail
 
 LABEL="com.mute-meet.relay"
 PLIST="$HOME/Library/LaunchAgents/${LABEL}.plist"
-DIST_PATH="$HOME/.local/dist"
-DIST_FILE="mute-meet.js"
-DIST_FILE_PATH="$DIST_PATH/$DIST_FILE"
+BIN_FILE_PATH="$HOME/.local/bin/mute-meet"
+LEGACY_FILE_PATH="$HOME/.local/dist/mute-meet.cjs"
 
 echo "Stopping ${LABEL} if running..."
 launchctl bootout "gui/$(id -u)/${LABEL}" >/dev/null 2>&1 || launchctl unload -w "$PLIST" >/dev/null 2>&1 || true
@@ -17,12 +16,12 @@ else
   echo "$PLIST not found (already removed)."
 fi
 
-if [[ -f "$DIST_FILE_PATH" ]]; then
-  rm -f "$DIST_FILE_PATH"
-  echo "Removed $DIST_FILE_PATH"
-else
-  echo "$DIST_FILE_PATH not found (already removed)."
-fi
+for FILE_PATH in "$BIN_FILE_PATH" "$LEGACY_FILE_PATH"; do
+  if [[ -f "$FILE_PATH" ]]; then
+    rm -f "$FILE_PATH"
+    echo "Removed $FILE_PATH"
+  fi
+done
 
 echo "Uninstalled ${LABEL}."
 
